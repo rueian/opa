@@ -238,7 +238,12 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 
 	loaded, err := initload.LoadPaths(params.Paths, params.Filter, params.BundleMode, params.BundleVerificationConfig, params.SkipBundleVerification)
 	if err != nil {
-		return nil, errors.Wrap(err, "load error")
+		if params.Watch {
+			loaded = &initload.LoadPathsResult{}
+			logrus.WithField("err", err).Warn("Skip initial load error in watch mode")
+		} else {
+			return nil, errors.Wrap(err, "load error")
+		}
 	}
 
 	info, err := runtime.Term(runtime.Params{Config: config})
